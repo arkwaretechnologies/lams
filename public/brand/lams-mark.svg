@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" role="img" aria-label="LAMS">
+  <defs>
+    <linearGradient id="shield" x1="60" y1="8" x2="60" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9B1C1C"/>
+      <stop offset="1" stop-color="#6B0F0F"/>
+    </linearGradient>
+  </defs>
+  <path d="M60 8L104 28V58C104 82.5 84.5 102.5 60 112C35.5 102.5 16 82.5 16 58V28L60 8Z" fill="url(#shield)"/>
+  <path d="M60 8L104 28V58C104 82.5 84.5 102.5 60 112C35.5 102.5 16 82.5 16 58V28L60 8Z" stroke="#D4AF37" stroke-width="3"/>
+  <path d="M44 36H76V46H58V84H44V36Z" fill="#D4AF37"/>
+  <path d="M60 20L92 34V56C92 74 78.5 88.5 60 96C41.5 88.5 28 74 28 56V34L60 20Z" stroke="#D4AF37" stroke-width="1.5" opacity="0.35"/>
+</svg>
