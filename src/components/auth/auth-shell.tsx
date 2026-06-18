@@ -22,12 +22,21 @@ const features = [
 
 type AuthShellProps = {
   children: React.ReactNode;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
+  formVariant?: "default" | "glass";
   className?: string;
 };
 
-export function AuthShell({ children, title, description, className }: AuthShellProps) {
+export function AuthShell({
+  children,
+  title,
+  description,
+  formVariant = "default",
+  className,
+}: AuthShellProps) {
+  const isGlass = formVariant === "glass";
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside
@@ -102,49 +111,87 @@ export function AuthShell({ children, title, description, className }: AuthShell
         </ul>
       </aside>
 
-      <main className="lams-surface flex flex-1 flex-col justify-center px-4 py-10 sm:px-8 lg:px-14 xl:px-20">
+      <main
+        className={cn(
+          "flex flex-1 flex-col justify-center px-4 py-10 sm:px-8 lg:px-14 xl:px-20",
+          isGlass ? "auth-shell-surface" : "lams-surface"
+        )}
+      >
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-left">
-            <div className="mb-5 flex items-center gap-3 lg:hidden">
-              <Image
-                src="/brand/lams-logo.png"
-                alt="LAMS"
-                width={48}
-                height={48}
-                className="rounded-xl shadow-sm"
-              />
-              <div className="text-left">
-                <p className="font-display text-lg font-semibold text-primary">LAMS</p>
-                <p className="text-xs text-muted-foreground">Letran Athlete Meal System</p>
+          {isGlass ? (
+            <>
+              <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+                <Image
+                  src="/brand/lams-logo.png"
+                  alt="LAMS"
+                  width={48}
+                  height={48}
+                  className="rounded-xl shadow-sm"
+                />
+                <div className="text-left">
+                  <p className="font-display text-lg font-semibold text-primary">LAMS</p>
+                  <p className="text-xs text-muted-foreground">Letran Athlete Meal System</p>
+                </div>
               </div>
-            </div>
 
-            <div className="hidden items-center gap-3 lg:mb-2 lg:flex">
-              <Image
-                src="/brand/lams-mark.svg"
-                alt=""
-                width={40}
-                height={40}
-                aria-hidden="true"
-              />
-            </div>
+              <div className={cn("auth-glass-card w-full", className)}>{children}</div>
+            </>
+          ) : (
+            <>
+              <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-left">
+                <div className="mb-5 flex items-center gap-3 lg:hidden">
+                  <Image
+                    src="/brand/lams-logo.png"
+                    alt="LAMS"
+                    width={48}
+                    height={48}
+                    className="rounded-xl shadow-sm"
+                  />
+                  <div className="text-left">
+                    <p className="font-display text-lg font-semibold text-primary">LAMS</p>
+                    <p className="text-xs text-muted-foreground">Letran Athlete Meal System</p>
+                  </div>
+                </div>
 
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-              {title}
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-          </div>
+                <div className="hidden items-center gap-3 lg:mb-2 lg:flex">
+                  <Image
+                    src="/brand/lams-mark.svg"
+                    alt=""
+                    width={40}
+                    height={40}
+                    aria-hidden="true"
+                  />
+                </div>
 
-          <div
+                {title ? (
+                  <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+                    {title}
+                  </h2>
+                ) : null}
+                {description ? (
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {description}
+                  </p>
+                ) : null}
+              </div>
+
+              <div
+                className={cn(
+                  "lams-gold-rule-top rounded-xl border border-border/80 bg-card p-6 shadow-(--shadow-card) sm:p-8",
+                  className
+                )}
+              >
+                {children}
+              </div>
+            </>
+          )}
+
+          <p
             className={cn(
-              "lams-gold-rule-top rounded-xl border border-border/80 bg-card p-6 shadow-(--shadow-card) sm:p-8",
-              className
+              "mt-8 text-center text-xs lg:text-left",
+              isGlass ? "text-muted-foreground" : "text-muted-foreground"
             )}
           >
-            {children}
-          </div>
-
-          <p className="mt-8 text-center text-xs text-muted-foreground lg:text-left">
             Colegio de San Juan de Letran · Athlete Services
           </p>
         </div>

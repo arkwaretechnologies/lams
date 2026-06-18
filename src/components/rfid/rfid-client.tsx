@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { TopBar } from "@/components/layout/top-bar";
 import { LamsCard } from "@/components/brand/lams-card";
 import { DataLabel } from "@/components/brand/data-label";
 import { EmptyState } from "@/components/brand/empty-state";
-import { RfidScanInput } from "@/components/rfid-scan-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,6 +44,14 @@ export function RfidClient({ athletes }: RfidClientProps) {
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [scannedTag, setScannedTag] = useState("");
   const [loading, setLoading] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (assignOpen) {
+      const id = requestAnimationFrame(() => tagInputRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  }, [assignOpen, selected?.id]);
 
   const filtered = athletes
     .filter((a) => a.status)
@@ -65,10 +72,6 @@ export function RfidClient({ athletes }: RfidClientProps) {
     setAssignOpen(false);
     setScannedTag("");
     setSelected(null);
-  }
-
-  function handleScan(tag: string) {
-    setScannedTag(tag);
   }
 
   async function confirmAssign() {
@@ -199,15 +202,12 @@ export function RfidClient({ athletes }: RfidClientProps) {
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">RFID Tag</p>
-                <RfidScanInput
-                  key={selected.id}
-                  onScan={handleScan}
-                  placeholder="Scan RFID tag..."
-                />
                 <Input
-                  className="font-data"
-                  placeholder="Or type tag manually..."
+                  ref={tagInputRef}
+                  className="h-11 font-mono text-base"
+                  placeholder="Scan RFID or type tag ID..."
                   value={scannedTag}
+                  autoComplete="off"
                   onChange={(e) => setScannedTag(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -216,6 +216,9 @@ export function RfidClient({ athletes }: RfidClientProps) {
                     }
                   }}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Press Enter after scanning, or type the tag and click Save.
+                </p>
               </div>
             </div>
           )}

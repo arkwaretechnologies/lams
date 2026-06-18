@@ -1,14 +1,6 @@
 import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-type LamsCardProps = React.ComponentProps<typeof Card> & {
+type LamsCardProps = React.ComponentProps<"div"> & {
   variant?: "default" | "ops";
   goldRule?: boolean;
   title?: string;
@@ -19,7 +11,7 @@ type LamsCardProps = React.ComponentProps<typeof Card> & {
 
 export function LamsCard({
   variant = "default",
-  goldRule = true,
+  goldRule = false,
   title,
   description,
   footer,
@@ -29,31 +21,34 @@ export function LamsCard({
   ...props
 }: LamsCardProps) {
   return (
-    <Card
+    <div
       className={cn(
-        "ring-0 shadow-(--shadow-card)",
-        goldRule && "lams-gold-rule-top",
-        variant === "ops" && "border-primary/15 bg-card",
-        variant === "default" && "border-border/80",
+        "lams-soft-card",
+        goldRule && "border-t-[3px] border-t-accent",
+        variant === "ops" && "border-primary/10",
         className
       )}
       {...props}
     >
       {(title || description || headerAction) && (
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-row items-start justify-between gap-4 px-5 pt-5 pb-4">
+          <div className="min-w-0">
             {title && (
-              <CardTitle className="font-display text-lg font-semibold tracking-tight">
-                {title}
-              </CardTitle>
+              <h3 className="text-base font-semibold leading-tight text-foreground">{title}</h3>
             )}
-            {description && <CardDescription>{description}</CardDescription>}
+            {description && (
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            )}
           </div>
           {headerAction}
-        </CardHeader>
+        </div>
       )}
-      {children && <CardContent className={!title && !description ? "pt-5" : undefined}>{children}</CardContent>}
-      {footer && <CardFooter>{footer}</CardFooter>}
-    </Card>
+      {children && (
+        <div className={cn("px-5 pb-5", !title && !description && "pt-5")}>{children}</div>
+      )}
+      {footer && (
+        <div className="border-t border-border/40 bg-muted/20 px-5 py-4">{footer}</div>
+      )}
+    </div>
   );
 }

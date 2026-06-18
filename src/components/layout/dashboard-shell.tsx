@@ -14,7 +14,7 @@ type DashboardShellProps = {
 function DashboardShellSkeleton() {
   return (
     <div className="flex h-screen overflow-hidden" aria-hidden="true">
-      <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
+      <aside className="flex h-full w-64 shrink-0 flex-col border-r bg-sidebar">
         <div className="border-b border-sidebar-border p-4">
           <div className="h-5 w-16 rounded bg-sidebar-accent/40" />
           <div className="mt-2 h-3 w-28 rounded bg-sidebar-accent/30" />

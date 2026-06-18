@@ -12,21 +12,25 @@ export function EmptyState({ title, description, className, children }: EmptySta
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-12 text-center",
+        "flex flex-col items-center justify-center rounded-2xl bg-muted/30 px-6 py-14 text-center",
         className
       )}
     >
-      <Image
-        src="/brand/lams-mark.svg"
-        alt=""
-        width={48}
-        height={48}
-        className="mb-4 opacity-20"
-        aria-hidden="true"
-      />
-      <p className="font-display text-lg font-semibold text-foreground">{title}</p>
+      <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10">
+        <Image
+          src="/brand/lams-mark.svg"
+          alt=""
+          width={28}
+          height={28}
+          className="opacity-40"
+          aria-hidden="true"
+        />
+      </div>
+      <p className="font-semibold text-foreground">{title}</p>
       {description && (
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
       )}
       {children && <div className="mt-4">{children}</div>}
     </div>

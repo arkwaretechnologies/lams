@@ -27,47 +27,58 @@ export function AthleteLookupInput({
   className,
 }: AthleteLookupInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const showResults = results.length > 0 && value.length > 0;
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
   return (
-    <div className={cn("relative", className)}>
-      <Search
-        className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-        aria-hidden="true"
-      />
-      <Input
-        ref={inputRef}
-        className="h-12 pl-9 text-base"
-        placeholder={placeholder}
-        value={value}
-        autoComplete="off"
-        aria-label="Scan RFID or search athlete"
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            onSubmit(value);
-          }
-        }}
-        onBlur={() => {
-          setTimeout(() => inputRef.current?.focus(), 100);
-        }}
-      />
-      {results.length > 0 && value.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-lg border border-border/80 bg-card shadow-(--shadow-card)">
+    <div className={cn("space-y-2", className)}>
+      <div className="relative">
+        <Search
+          className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <Input
+          ref={inputRef}
+          className="h-12 border-border/80 pl-9 text-base focus-visible:border-primary/35 focus-visible:ring-primary/15"
+          placeholder={placeholder}
+          value={value}
+          autoComplete="off"
+          aria-label="Scan RFID or search athlete"
+          aria-expanded={showResults}
+          aria-haspopup="listbox"
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onSubmit(value);
+            }
+          }}
+          onBlur={() => {
+            setTimeout(() => inputRef.current?.focus(), 100);
+          }}
+        />
+      </div>
+
+      {showResults && (
+        <div
+          className="lams-soft-card max-h-56 overflow-y-auto rounded-2xl"
+          role="listbox"
+          aria-label="Athlete search results"
+        >
           {results.map((a) => (
             <button
               key={a.id}
               type="button"
-              className="w-full border-b border-border/50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/60"
+              role="option"
+              className="w-full border-b border-border/40 px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/50"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onSelect(a)}
             >
-              <p className="font-medium">{a.full_name}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{a.full_name}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 <DataLabel>{a.student_id}</DataLabel>
                 {a.rfid_tag ? (
                   <>

@@ -9,7 +9,7 @@ interface TopBarProps {
 
 export function TopBar({ title, subtitle }: TopBarProps) {
   return (
-    <header className="border-b bg-background/95 backdrop-blur-sm">
+    <header className="border-b border-border/40 bg-[oklch(0.955_0.006_90/0.92)] backdrop-blur-sm dark:bg-background/95">
       <div className="flex h-[4.25rem] items-center justify-between px-6 md:px-8">
         <div>
           <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">

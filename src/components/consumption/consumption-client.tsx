@@ -8,6 +8,7 @@ import { LamsCard } from "@/components/brand/lams-card";
 import { DataLabel } from "@/components/brand/data-label";
 import { GoldRule } from "@/components/brand/gold-rule";
 import { AthleteLookupInput } from "@/components/consumption/athlete-lookup-input";
+import { ConsumptionTodayHistory } from "@/components/consumption/consumption-today-history";
 import {
   AmountKeypad,
   RemarksField,
@@ -15,6 +16,10 @@ import {
 } from "@/components/consumption/amount-keypad";
 import { createClient } from "@/lib/supabase/client";
 import { recordConsumptionAction } from "@/lib/actions/mutations";
+import {
+  fetchTodayConsumptions,
+  type TodayConsumptionItem,
+} from "@/lib/consumption/today-history";
 import {
   findCachedByRfid,
   searchCachedAthletes,
@@ -67,6 +72,15 @@ export function ConsumptionClient({
   const [templates, setTemplates] = useState<RemarkTemplate[]>(initialTemplates);
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [todayHistory, setTodayHistory] = useState<TodayConsumptionItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadTodayHistory = useCallback(async (athleteId: string) => {
+    setHistoryLoading(true);
+    const items = await fetchTodayConsumptions(athleteId);
+    setTodayHistory(items);
+    setHistoryLoading(false);
+  }, []);
 
   const refreshTemplates = useCallback(async () => {
     if (!navigator.onLine) {
@@ -102,10 +116,12 @@ export function ConsumptionClient({
       setAthlete(a);
       setSearch("");
       setSearchResults([]);
+      setTodayHistory([]);
       resetEntry();
       void refreshTemplates();
+      void loadTodayHistory(a.id);
     },
-    [resetEntry, refreshTemplates]
+    [resetEntry, refreshTemplates, loadTodayHistory]
   );
 
   const lookupAthlete = useCallback(async (query: string): Promise<CachedAthlete | null> => {
@@ -233,6 +249,7 @@ export function ConsumptionClient({
           remaining_today: result.remaining ?? 0,
         });
         resetEntry();
+        void loadTodayHistory(athlete.id);
       }
     } else {
       const clientId = crypto.randomUUID();
@@ -252,6 +269,7 @@ export function ConsumptionClient({
         remaining_today: athlete.remaining_today - numAmount,
       });
       resetEntry();
+      void loadTodayHistory(athlete.id);
     }
 
     setLoading(false);
@@ -278,9 +296,11 @@ export function ConsumptionClient({
                 results={searchResults}
                 onSelect={selectAthlete}
               />
-              <p className="mt-3 text-xs text-muted-foreground">
-                Press Enter after scanning, or pick from suggestions while typing.
-              </p>
+              {!searchResults.length || !search.length ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Press Enter after scanning, or pick from suggestions while typing.
+                </p>
+              ) : null}
             </LamsCard>
           ) : (
             <>
@@ -320,6 +340,11 @@ export function ConsumptionClient({
                 </div>
               </div>
 
+              <ConsumptionTodayHistory
+                items={todayHistory}
+                loading={historyLoading && todayHistory.length === 0}
+              />
+
               <LamsCard variant="ops" goldRule={false} className="lams-gold-rule-top">
                 <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
                   Amount &amp; Remarks
@@ -343,6 +368,7 @@ export function ConsumptionClient({
                       className="h-11 flex-1"
                       onClick={() => {
                         setAthlete(null);
+                        setTodayHistory([]);
                         resetEntry();
                       }}
                     >

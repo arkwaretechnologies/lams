@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { manilaToday, formatCurrency, formatTime, formatDate } from "@/lib/utils/date";
 import { Users, Receipt, Wallet, Clock } from "lucide-react";
+import type { StatTileTone } from "@/components/brand/stat-tile";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -40,11 +41,31 @@ export default async function DashboardPage() {
   const todayTotal = todayConsumptions?.reduce((s, c) => s + Number(c.amount), 0) ?? 0;
   const monthTotal = monthConsumptions?.reduce((s, c) => s + Number(c.amount), 0) ?? 0;
 
-  const stats = [
-    { title: "Athletes", value: athleteCount ?? 0, icon: Users },
-    { title: "Transactions Today", value: todayConsumptions?.length ?? 0, icon: Receipt },
-    { title: "Consumption Today", value: formatCurrency(todayTotal), icon: Wallet },
-    { title: "Month to Date", value: formatCurrency(monthTotal), icon: Clock },
+  const stats: {
+    title: string;
+    value: string | number;
+    icon: typeof Users;
+    tone: StatTileTone;
+  }[] = [
+    { title: "Athletes", value: athleteCount ?? 0, icon: Users, tone: "maroon" },
+    {
+      title: "Transactions Today",
+      value: todayConsumptions?.length ?? 0,
+      icon: Receipt,
+      tone: "gold",
+    },
+    {
+      title: "Consumption Today",
+      value: formatCurrency(todayTotal),
+      icon: Wallet,
+      tone: "rose",
+    },
+    {
+      title: "Month to Date",
+      value: formatCurrency(monthTotal),
+      icon: Clock,
+      tone: "plum",
+    },
   ];
 
   return (
@@ -58,7 +79,7 @@ export default async function DashboardPage() {
           title="Today's operations"
           description="Live overview of athlete meal activity"
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <StatTile key={stat.title} {...stat} />
           ))}

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
 import { forgotPasswordSchema } from "@/lib/validations/schemas";
 import { forgotPasswordAction } from "@/lib/actions/auth";
-import { AuthInput } from "@/components/auth/auth-input";
+import { GlassAuthInput } from "@/components/auth/glass-auth-input";
+import { GlassAuthButton } from "@/components/auth/glass-auth-button";
 import { AuthFormSkeleton } from "@/components/auth/auth-form-skeleton";
-import { Button } from "@/components/ui/button";
 import { z } from "zod";
 
 type ForgotForm = z.infer<typeof forgotPasswordSchema>;
@@ -44,14 +44,13 @@ export function ForgotPasswordForm() {
   }
 
   if (!mounted) {
-    return <AuthFormSkeleton />;
+    return <AuthFormSkeleton variant="glass" />;
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-      <AuthInput
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <GlassAuthInput
         label="Email"
-        icon={Mail}
         id="email"
         type="email"
         autoComplete="email"
@@ -59,23 +58,24 @@ export function ForgotPasswordForm() {
         error={errors.email?.message}
         {...register("email")}
       />
-      {error && (
-        <p className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
+      {error ? (
+        <p className="rounded-lg border border-rose-300/25 bg-rose-950/30 px-3 py-2 text-sm text-rose-100" role="alert">
           {error}
         </p>
-      )}
-      {message && (
-        <p className="rounded-lg border border-green-600/20 bg-green-600/5 px-3 py-2 text-sm text-green-700 dark:text-green-400" role="status">
+      ) : null}
+      {message ? (
+        <p className="rounded-lg border border-emerald-300/25 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-100" role="status">
           {message}
         </p>
-      )}
-      <Button
-        type="submit"
-        className="h-11 w-full transition-colors duration-200"
-        disabled={loading}
-      >
+      ) : null}
+      <GlassAuthButton disabled={loading}>
         {loading ? "Sending..." : "Send Reset Link"}
-      </Button>
+      </GlassAuthButton>
+      <p className="text-center text-sm text-white/55">
+        <Link href="/login" className="auth-glass-link">
+          Back to login
+        </Link>
+      </p>
     </form>
   );
 }
