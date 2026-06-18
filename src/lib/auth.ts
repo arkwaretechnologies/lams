@@ -19,6 +19,25 @@ export async function getSession() {
   return user;
 }
 
+function roleFromAppMetadata(
+  user: { app_metadata?: Record<string, unknown> },
+  fallbackCreatedAt: string
+): Role | null {
+  const meta = user.app_metadata ?? {};
+  const roleId = meta.role_id as string | undefined;
+  const roleSlug = meta.role_slug as string | undefined;
+  if (!roleId || !roleSlug) return null;
+
+  return {
+    id: roleId,
+    slug: roleSlug,
+    name: roleSlug === "administrator" ? "Administrator" : roleSlug,
+    description: null,
+    is_system: roleSlug === "administrator",
+    created_at: fallbackCreatedAt,
+  };
+}
+
 export async function getProfileWithRole(): Promise<ProfileWithRole | null> {
   const supabase = await createClient();
   const {
@@ -26,24 +45,27 @@ export async function getProfileWithRole(): Promise<ProfileWithRole | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
-    .select("*, roles(*)")
+    .select("*")
     .eq("id", user.id)
     .single();
 
-  if (!data || !data.status) return null;
+  if (error || !profile || !profile.status) return null;
 
-  const role = data.roles as unknown as Role;
+  const { data: roleData } = await supabase
+    .from("roles")
+    .select("*")
+    .eq("id", profile.role_id)
+    .single();
+
+  const role = roleData ?? roleFromAppMetadata(user, profile.created_at);
+  if (!role) return null;
+
   const permissions = (user.app_metadata?.permissions as string[] | undefined) ?? [];
 
   return {
-    id: data.id,
-    full_name: data.full_name,
-    email: data.email,
-    role_id: data.role_id,
-    status: data.status,
-    created_at: data.created_at,
+    ...profile,
     role,
     permissions,
   };

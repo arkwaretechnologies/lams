@@ -15,9 +15,35 @@ export async function loginAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const email = parsed.data.email.trim().toLowerCase();
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: parsed.data.password,
+  });
 
   if (error) return { error: error.message };
+
+  const userId = signInData.user?.id;
+  if (!userId) return { error: "Sign-in failed. Please try again." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("status")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!profile) {
+    await supabase.auth.signOut();
+    return {
+      error:
+        "Your account exists but has no profile. Ask an administrator to recreate your account.",
+    };
+  }
+
+  if (!profile.status) {
+    await supabase.auth.signOut();
+    return { error: "This account is inactive. Contact an administrator." };
+  }
 
   redirect("/");
 }

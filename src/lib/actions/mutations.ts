@@ -138,34 +138,61 @@ export async function createUserAction(formData: {
   password: string;
 }) {
   await requirePermission("users");
-  const parsed = userSchema.parse({ ...formData, status: true });
+  const parsed = userSchema.parse({
+    ...formData,
+    email: formData.email.trim().toLowerCase(),
+    status: true,
+  });
+
+  if (!parsed.password) {
+    return { error: "Password is required" };
+  }
+
   const admin = createAdminClient();
 
   const role = await getRoleWithPermissions(parsed.role_id);
   if (!role) return { error: "Invalid role" };
 
+  const appMetadata = buildAppMetadata(role);
+
   const { data: authUser, error: authError } = await admin.auth.admin.createUser({
     email: parsed.email,
-    password: parsed.password!,
+    password: parsed.password,
     email_confirm: true,
-    app_metadata: buildAppMetadata(role),
+    app_metadata: appMetadata,
   });
 
   if (authError || !authUser.user) {
     return { error: authError?.message ?? "Failed to create user" };
   }
 
-  const { error: profileError } = await admin.from("profiles").insert({
-    id: authUser.user.id,
-    full_name: parsed.full_name,
-    email: parsed.email,
-    role_id: parsed.role_id,
-    status: true,
-  });
+  const userId = authUser.user.id;
+
+  const { error: profileError } = await admin.from("profiles").upsert(
+    {
+      id: userId,
+      full_name: parsed.full_name,
+      email: parsed.email,
+      role_id: parsed.role_id,
+      status: true,
+    },
+    { onConflict: "id" }
+  );
 
   if (profileError) {
-    await admin.auth.admin.deleteUser(authUser.user.id);
+    await admin.auth.admin.deleteUser(userId);
     return { error: profileError.message };
+  }
+
+  const { error: syncError } = await admin.auth.admin.updateUserById(userId, {
+    email_confirm: true,
+    app_metadata: appMetadata,
+  });
+
+  if (syncError) {
+    await admin.auth.admin.deleteUser(userId);
+    await admin.from("profiles").delete().eq("id", userId);
+    return { error: syncError.message };
   }
 
   revalidatePath("/users");
@@ -179,6 +206,7 @@ export async function updateUserAction(
     email: string;
     role_id: string;
     status: boolean;
+    password?: string;
   }
 ) {
   await requirePermission("users");
@@ -187,11 +215,18 @@ export async function updateUserAction(
   const role = await getRoleWithPermissions(formData.role_id);
   if (!role) return { error: "Invalid role" };
 
+  const email = formData.email.trim().toLowerCase();
+  const password = formData.password?.trim();
+
+  if (password && password.length < 6) {
+    return { error: "Password must be at least 6 characters" };
+  }
+
   const { error: profileError } = await admin
     .from("profiles")
     .update({
       full_name: formData.full_name,
-      email: formData.email,
+      email,
       role_id: formData.role_id,
       status: formData.status,
     })
@@ -199,10 +234,50 @@ export async function updateUserAction(
 
   if (profileError) return { error: profileError.message };
 
-  await admin.auth.admin.updateUserById(id, {
+  const { error: authError } = await admin.auth.admin.updateUserById(id, {
+    email,
+    email_confirm: true,
     app_metadata: buildAppMetadata(role),
+    ban_duration: formData.status ? "none" : "876000h",
+    ...(password ? { password } : {}),
   });
 
+  if (authError) return { error: authError.message };
+
   revalidatePath("/users");
-  return { success: true, message: "User updated. They should sign in again for new permissions." };
+  return {
+    success: true,
+    message: password
+      ? "User updated. Password changed — they should sign in with the new password."
+      : "User updated. They should sign in again for new permissions.",
+  };
+}
+
+export async function deleteUserAction(id: string) {
+  await requirePermission("users");
+  const current = await requireProfile();
+
+  if (current.id === id) {
+    return { error: "You cannot delete your own account." };
+  }
+
+  const admin = createAdminClient();
+
+  const { count } = await admin
+    .from("consumptions")
+    .select("id", { count: "exact", head: true })
+    .eq("recorded_by", id);
+
+  if (count && count > 0) {
+    return {
+      error:
+        "This user has recorded transactions and cannot be deleted. Deactivate the account instead.",
+    };
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/users");
+  return { success: true };
 }
